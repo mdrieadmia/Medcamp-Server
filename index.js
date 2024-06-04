@@ -28,6 +28,7 @@ async function run() {
     // DB Collections
     const campsCollection = client.db("medcamp").collection("camps")
     const usersCollection = client.db("medcamp").collection("users")
+    const registeredCollection = client.db("medcamp").collection("registered")
 
     // Verify Token
     const verifyToken = (req, res, next) => {
@@ -164,6 +165,27 @@ async function run() {
         }
       }
       const result = await campsCollection.updateOne(query, updateDoc);
+      res.send(result)
+    })
+
+    // save new participant data to db
+    app.post('/registered', verifyToken, async(req, res)=>{
+      const newRegistered = req.body;
+      const result = await registeredCollection.insertOne(newRegistered)
+      res.send(result)
+    })
+
+    // Increment registered count 
+    app.patch('/increment-register/:id', verifyToken, async(req, res)=>{
+      const id = req.params.id;
+      const totalParticipant = req.body.participantCount;
+      const query = {_id : new ObjectId(id)}
+      const updateDoc = {
+        $set : {
+          participantCount : totalParticipant + 1
+        }
+      }
+      const result = await campsCollection.updateOne(query, updateDoc)
       res.send(result)
     })
 
