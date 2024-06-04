@@ -95,6 +95,20 @@ async function run() {
       res.send(result)
     })
 
+    // Update user data in db
+    app.patch('/user/:email', verifyToken, async(req, res)=>{
+      const email = req.params.email;
+      const query = {email}
+      const userData = req.body;
+      const updateDoc = {
+        $set : {
+          ...userData
+        }
+      }
+      const result = await usersCollection.updateOne(query, updateDoc)
+      res.send(result)
+    })
+
     //Find a uesr in users collection and saved data
     app.post('/users', async (req, res) => {
       const user = req.body
