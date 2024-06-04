@@ -27,7 +27,7 @@ async function run() {
 
     // DB Collections
     const campsCollection = client.db("medcamp").collection("camps")
-    const organizerCollection = client.db("medcamp").collection("organizer")
+    const usersCollection = client.db("medcamp").collection("users")
 
     // Verify Token
     const verifyToken = (req, res, next) => {
@@ -48,8 +48,8 @@ async function run() {
     const verifyOrganizer = async (req, res, next) => {
       const email = req.decoded.email;
       const query = { email: email };
-      const user = await organizerCollection.findOne(query);
-      if (!user) {
+      const user = await usersCollection.findOne(query);
+      if (!(user.role === "organizer")) {
         return res.status(403).send({ message: 'forbidden access' });
       }
       next();
@@ -62,10 +62,13 @@ async function run() {
       if (email !== req.decoded.email) {
         return res.status(403).send({ message: 'forbidden access' })
       }
-      const user = await organizerCollection.findOne({email});
-      let organizer = false;
-      if (user) {
+
+      const user = await usersCollection.findOne({email});
+      let organizer ;
+      if (user.role === 'organizer') {
         organizer = true;
+      }else{
+        organizer = false;
       }
       res.send({ organizer });
     })
@@ -77,6 +80,29 @@ async function run() {
       res.send({ token });
     })
 
+    // User related api
+    // Get organizer profile data
+    app.get('/organizer-data/:email', async(req, res)=>{
+      const email = req.params.email;
+      const result = await usersCollection.findOne({email})
+      res.send(result)
+    })
+
+    //Find a uesr in users collection and saved data
+    app.post('/users', async(req,res)=>{
+      const user = req.body
+      const isExist = await usersCollection.findOne({email : user.email})
+      if(isExist){
+        return res.send({message : "User already exist", insertedId : null})
+      }
+      const result = usersCollection.insertOne(user)
+      res.send(result)
+    })
+
+    app.get('/', async(req, res)=>{
+      res.send("Medcamp server is running...")
+    })
+
     //Get all camps from db  
     app.get('/camps', async (req, res) => {
       const result = await campsCollection.find().toArray()
@@ -84,7 +110,7 @@ async function run() {
     })
 
     //Get single camp details from db  
-    app.get('/camp/details/:id', verifyToken, async (req, res) => {
+    app.get('/camp/details/:id',verifyToken, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) }
       const result = await campsCollection.findOne(query)
@@ -92,9 +118,17 @@ async function run() {
     })
 
     //Save a camp to db
-    app.post('/camps', verifyToken, verifyOrganizer, async (req, res) => {
+    app.post('/camps', verifyToken, async (req, res) => {
       const camp = req.body;
       const result = await campsCollection.insertOne(camp);
+      res.send(result)
+    })
+
+    // Delete a camp from db
+    app.delete('/camp/:id', async(req, res)=>{
+      const id = req.params.id;
+      const query = {_id : new ObjectId(id)}
+      const result = await campsCollection.deleteOne(query)
       res.send(result)
     })
 
@@ -112,12 +146,7 @@ async function run() {
       res.send(result)
     })
 
-    // Get organizer profile data
-    app.get('/organizer-data/:email', async(req, res)=>{
-      const email = req.params.email;
-      const result = await organizerCollection.findOne({email})
-      res.send(result)
-    })
+    
 
 
 
