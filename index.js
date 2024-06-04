@@ -63,11 +63,11 @@ async function run() {
         return res.status(403).send({ message: 'forbidden access' })
       }
 
-      const user = await usersCollection.findOne({email});
-      let organizer ;
+      const user = await usersCollection.findOne({ email });
+      let organizer;
       if (user.role === 'organizer') {
         organizer = true;
-      }else{
+      } else {
         organizer = false;
       }
       res.send({ organizer });
@@ -82,24 +82,31 @@ async function run() {
 
     // User related api
     // Get organizer profile data
-    app.get('/organizer-data/:email', async(req, res)=>{
+    app.get('/user-organizer/:email', verifyToken, verifyOrganizer, async (req, res) => {
       const email = req.params.email;
-      const result = await usersCollection.findOne({email})
+      const result = await usersCollection.findOne({ email })
+      res.send(result)
+    })
+
+    // Get participant profile data
+    app.get('/user-participant/:email', verifyToken, async (req, res) => {
+      const email = req.params.email;
+      const result = await usersCollection.findOne({ email })
       res.send(result)
     })
 
     //Find a uesr in users collection and saved data
-    app.post('/users', async(req,res)=>{
+    app.post('/users', async (req, res) => {
       const user = req.body
-      const isExist = await usersCollection.findOne({email : user.email})
-      if(isExist){
-        return res.send({message : "User already exist", insertedId : null})
+      const isExist = await usersCollection.findOne({ email: user.email })
+      if (isExist) {
+        return res.send({ message: "User already exist", insertedId: null })
       }
       const result = usersCollection.insertOne(user)
       res.send(result)
     })
 
-    app.get('/', async(req, res)=>{
+    app.get('/', async (req, res) => {
       res.send("Medcamp server is running...")
     })
 
@@ -110,7 +117,7 @@ async function run() {
     })
 
     //Get single camp details from db  
-    app.get('/camp/details/:id',verifyToken, async (req, res) => {
+    app.get('/camp/details/:id', verifyToken, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) }
       const result = await campsCollection.findOne(query)
@@ -125,9 +132,9 @@ async function run() {
     })
 
     // Delete a camp from db
-    app.delete('/camp/:id', async(req, res)=>{
+    app.delete('/camp/:id', async (req, res) => {
       const id = req.params.id;
-      const query = {_id : new ObjectId(id)}
+      const query = { _id: new ObjectId(id) }
       const result = await campsCollection.deleteOne(query)
       res.send(result)
     })
@@ -136,9 +143,9 @@ async function run() {
     app.patch('/camp/:id', async (req, res) => {
       const id = req.params.id
       const camp = req.body;
-      const query = {_id : new ObjectId(id)}
+      const query = { _id: new ObjectId(id) }
       const updateDoc = {
-        $set : {
+        $set: {
           ...camp
         }
       }
@@ -146,7 +153,7 @@ async function run() {
       res.send(result)
     })
 
-    
+
 
 
 
