@@ -189,7 +189,13 @@ async function run() {
       res.send(result)
     })
 
-
+    // Get all register data from db
+    app.get('/registerd/:email', async(req, res)=>{
+      const email = req.params.email;
+      const query = {participantEmail : email}
+      const result = await registeredCollection.find(query).toArray();
+      res.send(result)
+    })
 
 
 
