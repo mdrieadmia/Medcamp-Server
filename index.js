@@ -30,6 +30,7 @@ async function run() {
     const campsCollection = client.db("medcamp").collection("camps")
     const usersCollection = client.db("medcamp").collection("users")
     const registeredCollection = client.db("medcamp").collection("registered")
+    const paymentCollection = client.db("medcamp").collection("payment")
 
     // Verify Token
     const verifyToken = (req, res, next) => {
@@ -169,6 +170,14 @@ async function run() {
       res.send(result)
     })
 
+    // Get registered camp details
+    app.get('/registered-camp/:id', async(req, res)=>{
+      const id = req.params.id
+      const query = {_id : new ObjectId(id)}
+      const result = await registeredCollection.findOne(query)
+      res.send(result)
+    })
+
     // save new participant data to db
     app.post('/registered', verifyToken, async(req, res)=>{
       const newRegistered = req.body;
@@ -177,16 +186,16 @@ async function run() {
     })
 
     // Increment registered count 
-    app.patch('/increment-register/:id', verifyToken, async(req, res)=>{
+    app.patch('/registered-camp/:id', verifyToken, async(req, res)=>{
       const id = req.params.id;
-      const totalParticipant = req.body.participantCount;
+      const camp = req.body;
       const query = {_id : new ObjectId(id)}
       const updateDoc = {
         $set : {
-          participantCount : totalParticipant + 1
+          ...camp
         }
       }
-      const result = await campsCollection.updateOne(query, updateDoc)
+      const result = await registeredCollection.updateOne(query, updateDoc)
       res.send(result)
     })
 
@@ -195,6 +204,14 @@ async function run() {
       const email = req.params.email;
       const query = {participantEmail : email}
       const result = await registeredCollection.find(query).toArray();
+      res.send(result)
+    })
+
+    // Remove a registered camp data from db
+    app.delete('/registered/camp/:id', async(req, res)=>{
+      const id = req.params.id
+      const query = {_id : new ObjectId(id)}
+      const result = await registeredCollection.deleteOne(query)
       res.send(result)
     })
 
@@ -211,6 +228,14 @@ async function run() {
         clientSecret : paymentIntent?.client_secret
       })
     })
+
+    // Post in Payment collection
+    app.post('/payment/camp', async(req, res)=>{
+      const camp = req.body;
+      const result = await paymentCollection.insertOne(camp)
+      res.send(result)
+    })
+
 
     await client.db("admin").command({ ping: 1 });
     console.log("Successfully connected to MongoDB!");
