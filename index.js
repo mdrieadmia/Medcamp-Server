@@ -31,6 +31,7 @@ async function run() {
     const usersCollection = client.db("medcamp").collection("users")
     const registeredCollection = client.db("medcamp").collection("registered")
     const paymentCollection = client.db("medcamp").collection("payment")
+    const feedbackCollection = client.db("medcamp").collection("feedback")
 
     // Verify Token
     const verifyToken = (req, res, next) => {
@@ -202,7 +203,7 @@ async function run() {
     // Get all register data from db
     app.get('/registerd/:email', async(req, res)=>{
       const email = req.params.email;
-      const query = {participantEmail : email}
+      const query = {participantEmail : `${email}`}
       const result = await registeredCollection.find(query).toArray();
       res.send(result)
     })
@@ -233,6 +234,29 @@ async function run() {
     app.post('/payment/camp', async(req, res)=>{
       const camp = req.body;
       const result = await paymentCollection.insertOne(camp)
+      res.send(result)
+    })
+
+    // All registered camps
+    app.get('/registered/camps', async(req, res)=>{
+      const result = await registeredCollection.find().toArray();
+      console.log(result);
+      res.send(result)
+    })
+
+    // Get payment camp data from db
+    app.get('/payment/camp/:email', async(req, res)=>{
+      const email = req.params.email
+      console.log(email);
+      const query = {participantEmail : email}
+      const result = await paymentCollection.find(query).toArray();
+      res.send(result)
+    })
+
+    // Post a feedback in db
+    app.post('/feedback', async(req, res)=>{
+      const feedback = req.body;
+      const result = await feedbackCollection.insertOne(feedback)
       res.send(result)
     })
 
