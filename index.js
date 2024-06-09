@@ -260,6 +260,12 @@ async function run() {
       res.send(result)
     })
 
+    // Get all feedback data from db
+    app.get('/feedback', verifyToken, async(req, res)=>{
+      const result = await feedbackCollection.find().toArray();
+      res.send(result)
+    })
+
 
     await client.db("admin").command({ ping: 1 });
     console.log("Successfully connected to MongoDB!");
