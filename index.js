@@ -143,14 +143,14 @@ async function run() {
     })
 
     //Save a camp to db
-    app.post('/camps', verifyToken, async (req, res) => {
+    app.post('/camps', verifyToken, verifyOrganizer, async (req, res) => {
       const camp = req.body;
       const result = await campsCollection.insertOne(camp);
       res.send(result)
     })
 
     // Delete a camp from db
-    app.delete('/camp/:id', async (req, res) => {
+    app.delete('/camp/:id', verifyToken, verifyOrganizer, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) }
       const result = await campsCollection.deleteOne(query)
@@ -158,7 +158,7 @@ async function run() {
     })
 
     //Update a camp to db
-    app.patch('/camp/:id', async (req, res) => {
+    app.patch('/camp/:id', verifyToken, verifyOrganizer, async (req, res) => {
       const id = req.params.id
       const camp = req.body;
       const query = { _id: new ObjectId(id) }
@@ -172,7 +172,7 @@ async function run() {
     })
 
     // Get registered camp details
-    app.get('/registered-camp/:id', async(req, res)=>{
+    app.get('/registered-camp/:id', verifyToken, async(req, res)=>{
       const id = req.params.id
       const query = {_id : new ObjectId(id)}
       const result = await registeredCollection.findOne(query)
@@ -201,7 +201,7 @@ async function run() {
     })
 
     // Get all register data from db
-    app.get('/registerd/:email', async(req, res)=>{
+    app.get('/registerd/:email',verifyToken, async(req, res)=>{
       const email = req.params.email;
       const query = {participantEmail : `${email}`}
       const result = await registeredCollection.find(query).toArray();
@@ -209,7 +209,7 @@ async function run() {
     })
 
     // Remove a registered camp data from db
-    app.delete('/registered/camp/:id', async(req, res)=>{
+    app.delete('/registered/camp/:id',verifyToken, async(req, res)=>{
       const id = req.params.id
       const query = {_id : new ObjectId(id)}
       const result = await registeredCollection.deleteOne(query)
@@ -217,7 +217,7 @@ async function run() {
     })
 
     // Payment Related API
-    app.post('/payment-intent', async(req, res)=>{
+    app.post('/payment-intent', verifyToken, async(req, res)=>{
       const {fees} = req.body;
       const amount = parseInt(fees * 100);
       const paymentIntent = await stripe.paymentIntents.create({
@@ -231,21 +231,21 @@ async function run() {
     })
 
     // Post in Payment collection
-    app.post('/payment/camp', async(req, res)=>{
+    app.post('/payment/camp', verifyToken, async(req, res)=>{
       const camp = req.body;
       const result = await paymentCollection.insertOne(camp)
       res.send(result)
     })
 
     // All registered camps
-    app.get('/registered/camps', async(req, res)=>{
+    app.get('/registered/camps', verifyToken, async(req, res)=>{
       const result = await registeredCollection.find().toArray();
       console.log(result);
       res.send(result)
     })
 
     // Get payment camp data from db
-    app.get('/payment/camp/:email', async(req, res)=>{
+    app.get('/payment/camp/:email',verifyToken, async(req, res)=>{
       const email = req.params.email
       console.log(email);
       const query = {participantEmail : email}
@@ -254,7 +254,7 @@ async function run() {
     })
 
     // Post a feedback in db
-    app.post('/feedback', async(req, res)=>{
+    app.post('/feedback', verifyToken, async(req, res)=>{
       const feedback = req.body;
       const result = await feedbackCollection.insertOne(feedback)
       res.send(result)
