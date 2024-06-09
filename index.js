@@ -193,10 +193,10 @@ async function run() {
       const query = {_id : new ObjectId(id)}
       const updateDoc = {
         $set : {
-          ...camp
+          participantCount : camp.participantCount
         }
       }
-      const result = await registeredCollection.updateOne(query, updateDoc)
+      const result = await campsCollection.updateOne(query, updateDoc)
       res.send(result)
     })
 
