@@ -8,7 +8,15 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
 const port = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "https://medcamp.netlify.app",
+    ]
+  })
+);
 app.use(express.json());
 
 
@@ -24,8 +32,7 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    await client.connect();
-
+    // await client.connect();
     // DB Collections
     const campsCollection = client.db("medcamp").collection("camps")
     const usersCollection = client.db("medcamp").collection("users")
@@ -240,14 +247,12 @@ async function run() {
     // All registered camps
     app.get('/registered/camps', verifyToken, async(req, res)=>{
       const result = await registeredCollection.find().toArray();
-      console.log(result);
       res.send(result)
     })
 
     // Get payment camp data from db
     app.get('/payment/camp/:email',verifyToken, async(req, res)=>{
       const email = req.params.email
-      console.log(email);
       const query = {participantEmail : email}
       const result = await paymentCollection.find(query).toArray();
       res.send(result)
@@ -261,13 +266,13 @@ async function run() {
     })
 
     // Get all feedback data from db
-    app.get('/feedback', verifyToken, async(req, res)=>{
+    app.get('/feedback', async(req, res)=>{
       const result = await feedbackCollection.find().toArray();
       res.send(result)
     })
 
 
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log("Successfully connected to MongoDB!");
   } finally {
   }
