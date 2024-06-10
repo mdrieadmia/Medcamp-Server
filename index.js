@@ -137,9 +137,15 @@ async function run() {
 
     //Get all camps from db  
     app.get('/camps', async (req, res) => {
-      const result = await campsCollection.find().toArray()
+      const search = req.query.search || "";
+      let query = {
+          campName: { $regex: search, $options: 'i' }
+      }
+      const camps = campsCollection.find(query);
+      const result = await camps.toArray();
       res.send(result)
-    })
+
+  })
 
     //Get single camp details from db  
     app.get('/camp/details/:id', verifyToken, async (req, res) => {
