@@ -107,12 +107,12 @@ async function run() {
     })
 
     // Update user data in db
-    app.patch('/user/:email', verifyToken, async(req, res)=>{
+    app.patch('/user/:email', verifyToken, async (req, res) => {
       const email = req.params.email;
-      const query = {email}
+      const query = { email }
       const userData = req.body;
       const updateDoc = {
-        $set : {
+        $set: {
           ...userData
         }
       }
@@ -139,13 +139,13 @@ async function run() {
     app.get('/camps', async (req, res) => {
       const search = req.query.search || "";
       let query = {
-          campName: { $regex: search, $options: 'i' }
+        campName: { $regex: search, $options: 'i' }
       }
       const camps = campsCollection.find(query);
       const result = await camps.toArray();
       res.send(result)
 
-  })
+    })
 
     //Get single camp details from db  
     app.get('/camp/details/:id', verifyToken, async (req, res) => {
@@ -185,94 +185,111 @@ async function run() {
     })
 
     // Get registered camp details
-    app.get('/registered-camp/:id', verifyToken, async(req, res)=>{
+    app.get('/registered-camp/:id', verifyToken, async (req, res) => {
       const id = req.params.id
-      const query = {_id : new ObjectId(id)}
+      const query = { _id: new ObjectId(id) }
       const result = await registeredCollection.findOne(query)
       res.send(result)
     })
 
     // save new participant data to db
-    app.post('/registered', verifyToken, async(req, res)=>{
+    app.post('/registered', verifyToken, async (req, res) => {
       const newRegistered = req.body;
       const result = await registeredCollection.insertOne(newRegistered)
       res.send(result)
     })
 
-    // Increment registered count 
-    app.patch('/registered-camp/:id', verifyToken, async(req, res)=>{
+
+    // Update Register data after payment 
+    app.patch('/registered-camp/payment/:id', verifyToken, async (req, res) => {
       const id = req.params.id;
       const camp = req.body;
-      const query = {_id : new ObjectId(id)}
+      const query = { _id: new ObjectId(id) }
       const updateDoc = {
-        $set : {
-          participantCount : camp.participantCount
+        $set: {
+          ...camp
+        }
+      }
+      const result = await registeredCollection.updateOne(query, updateDoc)
+      console.log(result);
+      res.send(result)
+    })
+
+    // Increment registered count 
+    app.patch('/registered-camp/:id', verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const camp = req.body;
+      const query = { _id: new ObjectId(id) }
+      const updateDoc = {
+        $set: {
+          participantCount: camp.participantCount
         }
       }
       const result = await campsCollection.updateOne(query, updateDoc)
       res.send(result)
     })
 
+
     // Get all register data from db
-    app.get('/registerd/:email',verifyToken, async(req, res)=>{
+    app.get('/registerd/:email', verifyToken, async (req, res) => {
       const email = req.params.email;
-      const query = {participantEmail : `${email}`}
+      const query = { participantEmail: `${email}` }
       const result = await registeredCollection.find(query).toArray();
       res.send(result)
     })
 
     // Remove a registered camp data from db
-    app.delete('/registered/camp/:id',verifyToken, async(req, res)=>{
+    app.delete('/registered/camp/:id', verifyToken, async (req, res) => {
       const id = req.params.id
-      const query = {_id : new ObjectId(id)}
+      const query = { _id: new ObjectId(id) }
       const result = await registeredCollection.deleteOne(query)
       res.send(result)
     })
 
     // Payment Related API
-    app.post('/payment-intent', verifyToken, async(req, res)=>{
-      const {fees} = req.body;
+    app.post('/payment-intent', verifyToken, async (req, res) => {
+      const { fees } = req.body;
       const amount = parseInt(fees * 100);
       const paymentIntent = await stripe.paymentIntents.create({
-        amount : amount,
-        currency : 'usd',
-        payment_method_types : ['card']
+        amount: amount,
+        currency: 'usd',
+        payment_method_types: ['card']
       })
       res.send({
-        clientSecret : paymentIntent?.client_secret
+        clientSecret: paymentIntent?.client_secret
       })
     })
 
     // Post in Payment collection
-    app.post('/payment/camp', verifyToken, async(req, res)=>{
+    app.post('/payment/camp', verifyToken, async (req, res) => {
       const camp = req.body;
       const result = await paymentCollection.insertOne(camp)
       res.send(result)
     })
 
     // All registered camps
-    app.get('/registered/camps', verifyToken, async(req, res)=>{
+    app.get('/registered/camps', verifyToken, async (req, res) => {
       const result = await registeredCollection.find().toArray();
       res.send(result)
     })
 
     // Get payment camp data from db
-    app.get('/payment/camp/:email',verifyToken, async(req, res)=>{
+    app.get('/payment/camp/:email', verifyToken, async (req, res) => {
       const email = req.params.email
-      const query = {participantEmail : email}
+      const query = { participantEmail: email }
       const result = await paymentCollection.find(query).toArray();
       res.send(result)
     })
 
     // Post a feedback in db
-    app.post('/feedback', verifyToken, async(req, res)=>{
+    app.post('/feedback', verifyToken, async (req, res) => {
       const feedback = req.body;
       const result = await feedbackCollection.insertOne(feedback)
       res.send(result)
     })
 
     // Get all feedback data from db
-    app.get('/feedback', async(req, res)=>{
+    app.get('/feedback', async (req, res) => {
       const result = await feedbackCollection.find().toArray();
       res.send(result)
     })
